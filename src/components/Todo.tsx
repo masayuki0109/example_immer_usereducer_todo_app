@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useTodos } from "../hooks/useTodos";
 
-type Priority = "height" | "mid" | `low`;
-type Todo = {
+export type Priority = "height" | "mid" | `low`;
+export type Todo = {
   id: number;
   title: string;
   isDone: boolean;
@@ -14,54 +15,22 @@ const priorityLabel = {
   low: "低い",
 } as const;
 
-const todoTemplate = (id: number, title: string): Todo => ({
+export const todoTemplate = (id: number, title: string): Todo => ({
   id,
   title,
   isDone: false,
   priority: "mid",
 });
 
-const prioritys: Priority[] = ["height", "mid", "low"];
+export const prioritys: Priority[] = ["height", "mid", "low"];
+
 export default function Todo() {
   const initTodos: Todo[] = [
     { id: 0, title: "走る", isDone: false, priority: "mid" },
   ];
   const [inputValue, setInputValue] = useState("");
-  const [todos, setTodos] = useState<Todo[]>(initTodos);
-
-  // 登録ボタンを押されたときの処理。空文字の場合は登録しない
-  const onAddButtonClick = () => {
-    if (!inputValue) return;
-
-    const nextId = Math.max(...todos.map((todo) => todo.id)) + 1;
-    setTodos((prev) => [...prev, todoTemplate(nextId, inputValue)]);
-  };
-
-  // 削除時の処理
-  const onDeleteButtonClick = (id: number) => {
-    setTodos((prev) => {
-      const nextTodos = prev.filter((todo) => todo.id !== id);
-      return nextTodos;
-    });
-  };
-
-  // プライオリティ変更
-  const onPriorityButtonCick = (id: number, diff: number) => {
-    setTodos((prev) => {
-      const nextTodos = prev.map((todo) => {
-        if (todo.id === id) {
-          return {
-            ...todo,
-            priority:
-              prioritys?.[prioritys.indexOf(todo.priority) + diff] ??
-              todo.priority,
-          };
-        }
-        return todo;
-      });
-      return nextTodos;
-    });
-  };
+  const { todos, onAddButtonClick, onDeleteButtonClick, onPriorityButtonCick } =
+    useTodos(initTodos);
 
   return (
     <>
@@ -71,7 +40,7 @@ export default function Todo() {
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
       ></input>
-      <button onClick={onAddButtonClick}>登録</button>
+      <button onClick={() => onAddButtonClick(inputValue)}>登録</button>
       <ul>
         {todos.map((todo) => (
           <li key={todo.id}>
