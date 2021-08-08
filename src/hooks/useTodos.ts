@@ -1,36 +1,32 @@
 import { useReducer } from "react";
 import { prioritys, Todo, todoTemplate } from "../components/Todo";
+import produce from "immer";
 
 type TodoAction =
   | { type: "addTodo"; payload: string }
   | { type: "deleteTodo"; payload: number }
   | { type: "changePriority"; payload: { id: number; diff: number } };
 
-const todoReducer = (state: Todo[], action: TodoAction) => {
+const todoReducer = produce((state: Todo[], action: TodoAction) => {
   switch (action.type) {
     case "addTodo":
       const nextId = Math.max(...state.map((todo) => todo.id)) + 1;
-      return [...state, todoTemplate(nextId, action.payload)];
+      state.push(todoTemplate(nextId, action.payload));
+      break;
     case "deleteTodo":
       return [...state.filter((todo) => action.payload !== todo.id)];
     case "changePriority":
-      const nextTodos = state.map((todo) => {
-        if (todo.id === action.payload.id) {
-          return {
-            ...todo,
-            priority:
-              prioritys?.[
-                prioritys.indexOf(todo.priority) + action.payload.diff
-              ] ?? todo.priority,
-          };
-        }
-        return todo;
-      });
-      return nextTodos;
+      const todo = state.find((todo) => todo.id === action.payload.id);
+      if (!todo) return state
+
+      todo.priority =
+        prioritys?.[prioritys.indexOf(todo.priority) + action.payload.diff] ??
+        todo.priority;
+      break;
     default:
       return state;
   }
-};
+});
 
 export const useTodos = (initTodos: Todo[]) => {
   const [todos, dispatch] = useReducer(todoReducer, initTodos);
